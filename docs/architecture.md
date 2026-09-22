@@ -1,182 +1,149 @@
 # ABES Architecture
 
-## Thesis
+## Conclusion
 
-ABES should be a **repository-native context operating layer for coding agents**.
+ABES should be a **small, repository-native continuity layer for coding agents**.
 
-Its job is not to replace the coding agent, the editor, or the task tracker.
-Its job is to make project context durable, structured, and recoverable across sessions so the user can mostly say:
+It should not try to be the coding agent, the orchestration runtime, or the memory platform.  
+It should give the agent just enough durable structure to enter a project, recover what matters, keep state current, and leave the repository easier to resume than it found it.
 
-> I want to do X.
+## Design goals
 
-and the agent can determine the relevant workflow with minimal manual prompting.
+1. chat-first use
+2. low user cognitive load
+3. durable context in Git
+4. explicit separation of stable context vs changing state
+5. evidence-backed memory promotion
+6. portability across host tools
+7. minimal always-on token cost
 
-## What ABES must do
+## Minimum core
 
-1. enter a new project with little prior context
-2. inspect the repository and detect the technology surface
-3. establish a durable context layer inside the repository
-4. separate long-lived memory from current-session state
-5. store plans and research as explicit artifacts
-6. keep facts separate from guesses and recommendations
-7. surface high-value opportunities without pretending they are requirements
+### 1. Instruction entrypoint
 
-## Core model
+**File:** `AGENTS.md`
 
-ABES has five layers.
+Purpose:
 
-### 1. Normative instruction layer
+- tell future agents what to read first
+- define conflict resolution rules
+- keep always-on instructions small
 
-Purpose: small, stable guidance that should be available early.
+### 2. Durable project brief
 
-Mechanism:
+**File:** `.abes/project/brief.md`
 
-- root `AGENTS.md`
-- optional existing project instructions preserved around an ABES-managed block
+Purpose:
 
-Contents:
+- capture what the project is trying to achieve
+- record stable constraints and priorities
+- preserve high-value unknowns future sessions should clarify
 
-- what to read first
-- memory discipline
-- fact / inference / hypothesis / recommendation distinction
-- update responsibilities
+This is about **intent**, not repository detection.
 
-### 2. Project context layer
+### 3. Repository inventory
 
-Purpose: durable project identity and architecture facts.
+**File:** `.abes/project/inventory.md`
 
-Files:
+Purpose:
 
-- `.abes/project/identity.md`
-- `.abes/project/architecture.md`
-- `.abes/project/goals.md`
+- store bootstrap-generated observations about the repo surface
+- record detected manifests, likely code/test/doc locations, and commands to verify
+- separate observed facts from inferred meaning
 
-Contents:
+This is about **evidence**, not intent.
 
-- detected stack and manifests
-- likely source and test locations
-- observed commands and entrypoints
-- user goals and constraints
-- known unknowns
+### 4. Working state
 
-### 3. Working state layer
+**File:** `.abes/state/current.md`
 
-Purpose: active state that changes frequently.
+Purpose:
 
-Files:
+- track what is being worked on now
+- record blockers and active questions
+- hold contradictions until the durable layers are updated
 
-- `.abes/state/current.md`
+This file should stay current, not cumulative.
 
-Contents:
+### 5. Durable memory
 
-- current objective
-- active questions
-- near-term next steps
-- temporary risks/blockers
-
-Rule: this layer is allowed to change often and does not need long-term historical completeness.
-
-### 4. Durable memory layer
-
-Purpose: information worth keeping across sessions.
-
-Files:
+**Files:**
 
 - `.abes/memory/decisions.md`
 - `.abes/memory/conventions.md`
-- `.abes/memory/opportunities.md`
 
-Memory classes:
+Purpose:
 
-- **decisions**: choices that changed the project direction
-- **conventions**: repeatable repo habits and constraints
-- **opportunities**: candidate improvements or ideas, always tagged with evidence and confidence
+- keep only durable facts future agents will actually need
+- separate project-changing decisions from repeatable conventions
 
-Rule: memory should only contain durable information that a future agent would reasonably need.
+ABES should **not** default to a third memory class for idea generation. Candidate ideas are too volatile to deserve always-on durable memory by default.
 
-### 5. Artifact layer
+### 6. Artifacts
 
-Purpose: generated outputs for plans, specs, research, and implementation support.
+**Directory:** `.abes/artifacts/`
 
-Files:
+Purpose:
 
-- `.abes/artifacts/*`
+- hold reusable outputs like plans, research, specifications, and review summaries
+- hold opportunity backlogs or investigations that are not durable memory yet
 
-Artifacts are not baseline memory. They are reusable outputs that may later promote facts into durable memory.
+## Conflict model
 
-## Data flow
+If sources disagree:
 
-```text
-user request
-  -> agent reads AGENTS.md
-  -> agent reads .abes/project/*
-  -> agent reads .abes/state/current.md
-  -> agent selectively reads memory/artifacts
-  -> agent plans / researches / implements
-  -> agent updates state
-  -> agent promotes only durable learnings into memory
-```
+1. **user statements** define current goals and priorities
+2. **code and runtime evidence** define current implementation truth
+3. **ABES files** are cached project context and must be corrected when stale
+
+This rule is required for scenario handling, especially when memory, code, and chat diverge.
 
 ## Initialization flow
 
 ```text
-bring ABES into repo
-  -> bootstrap scans repository surface
-  -> bootstrap writes AGENTS block and .abes structure
-  -> first agent reviews generated identity/architecture/goals
-  -> user corrects missing intent through chat
-  -> future sessions start from durable context instead of zero
+bootstrap ABES into repository
+  -> scan repository conservatively
+  -> create AGENTS block
+  -> create project brief, inventory, state, memory, and artifact files
+  -> leave unknowns explicit instead of inventing answers
+  -> let the next chat refine goals and constraints
 ```
 
-## Controlled idea discovery
+## Agent workflow
 
-ABES should propose ideas only when triggered by evidence.
+```text
+user says something natural
+  -> agent reads AGENTS.md
+  -> agent reads brief, inventory, current state
+  -> agent decides whether the task is research / plan / implementation / review
+  -> agent pulls only relevant memory/artifacts
+  -> agent works
+  -> agent updates current state
+  -> agent promotes durable facts only when justified
+```
 
-### Allowed triggers
+The user should not have to decide which file to update or which workflow to activate.
 
-- repeated failures or recurring TODO classes
-- explicit review/audit requests
-- architecture contradictions discovered during work
-- repeated manual work that suggests automation
-- bootstrap findings that reveal missing fundamentals
+## Why this is smaller than the previous direction
 
-### Evidence requirement
+The previous implementation had the right instinct about durable context, but still carried avoidable structure:
 
-Every idea should record:
+- three separate project files when two are enough
+- a default opportunity-memory file that encourages noise
+- too little guidance on contradiction handling
+- too much reliance on the user to keep context truthful
 
-- type: technical / product / workflow / research
-- evidence
-- confidence
-- why it matters now
-- why it is not already a requirement
+The revised architecture removes what is not foundational while strengthening the pieces that matter.
 
-Store those in `.abes/memory/opportunities.md`, not as facts.
+## What stays optional
 
-## Multi-agent stance
+Not part of the ABES core:
 
-ABES should support multiple agent roles, but only conceptually in MVP.
+- multi-agent orchestration runtime
+- MCP server
+- search/index database
+- path-scoped rule engine
+- autonomous idea ranking service
+- machine-readable snapshot cache beyond the Markdown inventory
 
-Useful roles:
-
-- researcher
-- planner
-- implementer
-- reviewer
-- critic
-- verifier
-
-MVP does not need an orchestration runtime. It only needs a shared context substrate those agents can all read.
-
-## Why this is smaller than the original concept
-
-A giant autonomous system is not the shortest path to value.
-
-The smallest useful ABES is:
-
-- bootstrap
-- context files
-- memory discipline
-- artifact discipline
-- clear instruction entrypoint
-
-Anything beyond that must justify its cost.
+These may become useful later, but ABES does not need them to be valuable now.

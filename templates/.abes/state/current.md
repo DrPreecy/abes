@@ -3,11 +3,19 @@
 
 - current objective:
 - active task:
+- verified focus:
 - blockers:
 - next action:
-- owner note:
+
+## Active questions
+
+- question:
+
+## Contradictions to resolve
+
+- contradiction:
 
 ## Session reminders
 
 - Keep temporary state here instead of polluting durable memory.
-- Promote only durable facts, decisions, and conventions into `.abes/memory/`.
+- If a contradiction survives beyond this task, update the brief, inventory, or durable memory rather than leaving drift here.

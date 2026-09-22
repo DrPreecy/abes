@@ -1,257 +1,158 @@
 # ABES Research and Diagnosis
 
-## A. Current repository diagnosis
+## Independent conclusion
 
-### What existed
+ABES should be a **small project-intelligence substrate for coding agents**:
 
-The committed repository effectively contained:
+- one small always-on instruction entrypoint
+- one durable intent brief
+- one observed repository inventory
+- one current-state file
+- a narrow durable memory layer
+- artifacts for everything else
 
-- a one-line root `README.md`
-- `abes-scaffold.zip`
-- an unmaterialized scaffold for an "Automated Business Execution System"
+That is enough to make a new or existing repository materially easier for future agents to enter without turning ABES into a framework that demands its own workflow.
 
-The scaffold inside the zip contained a business-idea workflow with:
+## What the earlier architecture got wrong
 
-- fixed phases (`workflow/01_discovery` ... `05_production`)
-- prompt templates
-- a legal checklist
-- a root `AGENTS.md`
-- status and knowledge templates
+The earlier reset moved ABES in the right general direction, but it still missed several important points.
 
-### What was wrong
+### 1. It kept too many top-level context buckets
 
-1. **The real product was hidden in a zip.** The repository itself was not the system.
-2. **The architecture was domain-specific.** It optimized for founder/business discovery, not arbitrary software projects.
-3. **Initialization was weak.** It assumed the user would fill templates before ABES became useful.
-4. **Context handling was shallow.** It had phase files, but not a durable project intelligence model.
-5. **The instruction model was monolithic.** It relied on one broad agent instruction file and phase prompts.
-6. **Autonomy was inconsistent.** It wanted durable context, but still expected the user to manage file workflows.
-7. **The system had no reusable bootstrap mechanism.** It could not truly be "brought into a new project".
+Splitting durable project context into `identity.md`, `architecture.md`, and `goals.md` looks tidy, but for a tiny bootstrap foundation it creates unnecessary routing overhead. Most sessions need one place for intent and one place for repository evidence, not three semi-overlapping files.
 
-### What was merely scaffolded
+### 2. It treated opportunities as default durable memory
 
-Almost everything. There was no executable bootstrap, no real repository ingestion path, no testable initialization behavior, and no architecture for ongoing project memory.
+Ideas are usually the noisiest class of information. Making `opportunities.md` a default durable memory file biases the system toward accumulating speculative backlog instead of preserving only what repeatedly proves useful.
 
-## B. Requirement model
+### 3. It did not define contradiction handling strongly enough
 
-Converted from the problem statement, ABES needs these concrete requirements.
+The first architecture talked about durable context, but not clearly enough about what happens when code, memory, and user instructions disagree. Without an explicit precedence model, context rot is guaranteed.
 
-### Product requirements
+### 4. It bootstrap-scanned too naively
 
-- chat-first interaction
-- durable context without repeated prompt setup
-- useful from a cold start in a new project
-- capable of surfacing evidence-backed opportunities
-- explicit distinction between fact and inference
+The initial bootstrap walked the entire tree through repeated globbing, followed symlinked write targets implicitly, and inferred commands too optimistically. That is fragile in real repositories.
 
-### Architecture requirements
+### 5. It still left too much context maintenance burden on the user
 
-- repo-native persistence
-- small always-on context
-- selective loading of project/task/history context
-- durable memory separate from working state
-- artifacts separate from memory
-- conservative initialization with reviewable output
+The docs argued for chat-first usage, but the generated file set was still generic enough that future agents would often need the user to manually clarify what belongs where.
 
-### Maintainability requirements
+## What the earlier architecture got right
 
-- readable in Git
-- no required external database for MVP
-- no giant prompt monolith
-- no speculative multi-agent runtime
-- easy for future agents to inspect and continue
+### 1. ABES should be repo-native
 
-## C. Research findings
+Keeping context in Git-visible files is correct for portability, inspection, and multi-tool use.
 
-Below are the most relevant systems and what they imply for ABES.
+### 2. State and durable memory should be separate
 
-| Repository / system | Relevant architecture | Useful pattern | Weakness | ABES implication |
+This is the single strongest decision in the earlier architecture and should remain.
+
+### 3. Bootstrap should be conservative
+
+The idea that bootstrap should create helpful files without inventing deep architecture is correct.
+
+### 4. ABES should complement, not replace, the coding agent
+
+Trying to compete with the host agent or editor would push ABES into the wrong product layer.
+
+## Research that changed the final position
+
+The following patterns materially influenced the revised architecture:
+
+| Source | Relevant pattern | Impact on ABES |
+| --- | --- | --- |
+| [Session Briefing](https://github.com/CaptCanadaMan/session-briefing) | persistent context and current state should be split cleanly, and current state should stay small rather than grow into a log | reinforced keeping a single current-state file separate from durable context |
+| [Awesome Progress Tracker](https://github.com/AndriiLavrekha/awesome-progress-tracker) | one compact resume file plus lightweight automation often beats a large knowledge base | pushed ABES toward a smaller state model and away from default idea-memory sprawl |
+| [Agent Kit](https://github.com/Mapl6/agent-kit) | bootstrap/indexing should be conservative, local-first, and explicit about safety limits | reinforced pruning generated/vendor trees and rejecting unsafe file targets |
+| [codecricket](https://github.com/fransjorden/codecricket) | always-on instructions must stay small, memory can leak secrets, and cross-tool context needs clear boundaries | reinforced keeping ABES file-first, small, and cautious about what becomes durable memory |
+
+These patterns argue against a larger architecture more strongly than they argue for new subsystems.
+
+## Disagreement matrix
+
+| Topic | Previous approach | Independent view | Evidence | Decision |
 | --- | --- | --- | --- | --- |
-| [Aider-AI/aider](https://github.com/Aider-AI/aider) | terminal coding agent with codebase mapping, git integration, lint/test loops | repository mapping and conservative developer control | optimized for active coding sessions, not durable project memory | ABES should not try to replace the coding agent; it should complement one with better long-lived context |
-| [cline/cline](https://github.com/cline/cline) | IDE/CLI/desktop agent with rules, skills, checkpoints, MCP/plugins, multi-agent teams | explicit plan/act split, rules+skills layering, checkpoints | broad surface area and rising complexity | ABES should copy the idea of small persistent rules, but avoid inheriting a heavyweight platform scope |
-| [continuedev/continue](https://github.com/continuedev/continue) | coding agent across editor surfaces, source-controlled checks | repo-level configuration and source-controlled agent behavior | archived/read-only; not a durable memory system | ABES should favor source-controlled agent context, but not depend on a single host product |
-| [OpenHands/OpenHands](https://github.com/OpenHands/OpenHands) | agent control center connected to agent server backends and automations | separate control plane from execution backends | much heavier than ABES needs for MVP | ABES can later integrate with orchestration systems, but should not become one first |
-| [sst/opencode](https://github.com/sst/opencode) | coding-agent runtime with layered context, session state, AGENTS/CLAUDE loading, overflow compaction | explicit separation of system context, session history, context sources, and instruction discovery | more runtime sophistication than ABES needs on day one | ABES should copy its context admission model and session/state separation, not its full runtime |
-| [mem0ai/mem0](https://github.com/mem0ai/mem0) | externalized long-term memory infrastructure with retrieval/search APIs | memory as a distinct subsystem | service/platform complexity and additive memory bias | ABES should treat memory as a disciplined layer, but keep MVP repo-native and reviewable |
-| [tigerless-labs/agent-memory](https://github.com/tigerless-labs/agent-memory) | markdown truth + SQLite cache + local retrieval | files as truth, index as cache, retrieve-by-path | still more runtime than needed for day one | ABES should adopt file-first truth and selective reading, but skip advanced indexing in MVP |
-| [okf-memory/okf-agent-memory](https://github.com/okf-memory/okf-agent-memory) | dual-memory model: small push instructions + pull knowledge bundle | explicit split between small always-on codex and on-demand knowledge | spec-heavy and larger than necessary for MVP | ABES should adopt the small-instruction / larger-knowledge split without copying the full spec stack |
-| [alioshr/memory-bank-mcp](https://github.com/alioshr/memory-bank-mcp) | file-based MCP memory server with per-project isolation | portable MCP interoperability over plain project memory files | very simple; no ranking, compaction, or memory discipline by itself | ABES can expose its repo-native memory through MCP later, but MCP is a transport, not the architecture |
-| [Claude Code memory docs](https://code.claude.com/docs/en/memory) | layered instruction hierarchy with project/user/local memory and rules/skills/hooks | layered context and keeping always-on instructions small | host-specific | ABES should mirror the layering concept in repo-native files |
-| [Cursor rules docs](https://cursor.com/docs/rules) | path-scoped project rules with selective loading | selective rule loading by relevance/path | host-specific behavior | ABES should design for selective context, but not assume a single editor's rule engine |
-| [OpenAI Codex AGENTS.md docs](https://github.com/openai/codex/blob/main/docs/agents_md.md) | hierarchical AGENTS loading from global to local directories | repo-local instructions as a durable control plane | limited to instruction files alone | ABES should use AGENTS as the entrypoint, but not as the whole memory system |
-| [Model Context Protocol](https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro) | host/client/server protocol for external tools/resources/prompts | standardized capability attachment | does not itself solve durable project memory | ABES can integrate with MCP later, but MCP is not ABES's core identity |
+| Core architecture | five layers with three project files plus opportunities memory | keep the layered idea but collapse project context to `brief + inventory` and remove default opportunity memory | current docs over-separate intent/evidence; external systems succeed with fewer high-signal files | simplify |
+| Context | `identity.md`, `architecture.md`, `goals.md` | `brief.md` for intent, `inventory.md` for observed repo facts | most sessions need intent + evidence, not three documents | merge |
+| Memory | decisions, conventions, opportunities | decisions + conventions only; opportunities belong in artifacts until justified | opportunity lists create noise faster than durable value | reduce |
+| Instructions | read multiple project files first | read three files first: `AGENTS.md`, `brief`, `inventory`, then state | always-on context should stay small | tighten |
+| Initialization | repeated glob scans over full tree | single conservative directory walk with pruning | large repos and generated trees break naive globbing | replace |
+| Agents | conceptual multi-agent roles | keep roles conceptual only; no runtime | no evidence that ABES needs orchestration before context quality | keep small |
+| Research | architecture doc referenced external systems broadly | use external systems mainly as negative pressure against complexity | the best examples succeed by staying focused | narrow |
+| Autonomous ideas | default opportunities memory file | evidence-backed idea artifacts only when useful | not every repo needs a standing idea backlog | demote |
+| Artifacts | explicit artifact layer | keep it | reusable outputs need a home separate from memory | keep |
+| State | one current state file | keep it, but add contradiction handling | current truth drifts without an explicit conflict section | strengthen |
+| User interaction | chat-first claimed in docs | enforce chat-first by reducing file-routing burden | user should not need to remember ABES workflow details | strengthen |
+| Persistence | repo-native markdown only | keep markdown-first persistence | portability and reviewability matter more than clever storage | keep |
+| Extensibility | optional future MCP/rules/search later | keep optional only | premature extensibility is still overhead | defer |
+| Security | force protected by managed marker only | also reject symlinked destinations and prune unsafe traversal | current review findings expose concrete safety gaps | harden |
+| Complexity | minimal compared with original zip scaffold | still too large for the actual minimum core | scenario testing shows smaller structure works better | reduce |
 
-## D. Competitive / architectural landscape
+## Scenario tests
 
-ABES overlaps with:
+### Scenario A — Empty / new software project
 
-- AGENTS/CLAUDE/Cursor rule systems for instructions
-- memory systems for durable facts
-- coding agents for implementation workflows
-- orchestration systems for multi-agent coordination
+ABES should bootstrap a brief with explicit unknowns and an inventory showing little detected structure. The next chat should clarify goals, not force the user to fill templates before work can begin.
 
-ABES differs if it stays focused on one job:
+### Scenario B — Existing mature codebase
 
-> make project context durable, inspectable, and agent-usable across sessions and across host tools.
+ABES should generate a conservative inventory, capture likely commands and key locations, and then let future agents refine durable conventions and decisions as they verify them.
 
-If ABES becomes "yet another memory database" it loses differentiation.
-If ABES becomes "yet another coding agent" it competes in the wrong layer.
-If ABES becomes "yet another orchestration engine" it becomes too heavy too early.
+### Scenario C — Messy prototype
 
-## E. Proposed ABES architecture
+The brief should capture unstable goals and constraints, the inventory should expose where code actually lives, and the current-state file should track contradictions until they are resolved.
 
-### Components
+### Scenario D — Product idea with little code
 
-1. **Instruction entrypoint** – root `AGENTS.md`
-2. **Project context** – `.abes/project/*`
-3. **Working state** – `.abes/state/current.md`
-4. **Durable memory** – `.abes/memory/*`
-5. **Artifacts** – `.abes/artifacts/*`
-6. **Bootstrap utility** – `scripts/abes_bootstrap.py`
-7. **Templates** – `templates/`
+The brief becomes more important than the inventory. ABES should capture the idea, unknowns, and decision points without pretending the repo already contains validated architecture.
 
-This architecture deliberately borrows:
+### Scenario E — User has no idea what to do next
 
-- Aider's bounded repository understanding
-- OpenCode's explicit separation of session context from baseline context
-- Continue/Codex/Claude-style file-based instruction loading
-- OKF/agent-memory's small push layer plus larger pull layer
-- MCP only as a future interoperability boundary
+ABES may propose next actions, but only from evidence: missing tests, contradictory docs, absent deployment path, or obvious repo gaps. Suggestions belong in artifacts or current state until accepted or repeatedly justified.
 
-### Responsibilities
+### Scenario F — Conflicting information
 
-- `AGENTS.md`: tell future agents what to read and how to behave
-- project context: store identity, architecture, goals, unknowns
-- state: capture active work without polluting long-term memory
-- memory: keep durable decisions, conventions, and opportunities
-- artifacts: store plans/specs/research outputs
-- bootstrap: initialize ABES in a new repository safely
+When memory says one thing, code says another, and the user says something else:
 
-### Context flow
+- user intent wins for what should happen next
+- code wins for what exists now
+- memory becomes stale until updated
 
-- always-on: `AGENTS.md`
-- small project baseline: `.abes/project/identity.md`
-- task baseline: `.abes/state/current.md`
-- pull-on-demand: `.abes/memory/*`, `.abes/artifacts/*`
+Without this rule, ABES turns into a drift amplifier.
 
-### Memory flow
-
-observation -> state or artifact -> promote durable items into memory -> revise when contradicted
-
-### Agent flow
-
-user request -> read entrypoint -> read project context -> pull needed memory/artifacts -> act -> update state -> promote durable learnings
-
-### Initialization flow
-
-scan repo -> generate project summary and file structure -> install AGENTS block -> create `.abes/` directories/files -> leave explicit unknowns for chat-based correction
-
-### User interaction flow
-
-user speaks in chat -> agent reads ABES context -> agent updates files itself when durable state must change
-
-### Implementation flow
-
-bootstrap first -> first analysis pass -> ongoing work updates state/artifacts/memory
-
-## F. Proposed repository structure
+## Final architecture
 
 ```text
-.
-├── AGENTS.md
-├── README.md
-├── docs/
-│   ├── architecture.md
-│   └── research-and-diagnosis.md
-├── scripts/
-│   └── abes_bootstrap.py
-├── templates/
-│   ├── AGENTS.md
-│   └── .abes/
-│       ├── artifacts/README.md
-│       ├── memory/{conventions.md,decisions.md,opportunities.md}
-│       ├── project/{architecture.md,goals.md,identity.md}
-│       └── state/current.md
-└── tests/
-    └── test_bootstrap.py
+AGENTS.md
+  -> .abes/project/brief.md
+  -> .abes/project/inventory.md
+  -> .abes/state/current.md
+  -> relevant memory/artifacts only when needed
 ```
 
-Every folder now has a direct reason tied to initialization or durable continuation.
+Generated structure:
 
-## G. MVP
+```text
+.abes/
+├── artifacts/
+│   └── README.md
+├── memory/
+│   ├── conventions.md
+│   └── decisions.md
+├── project/
+│   ├── brief.md
+│   └── inventory.md
+└── state/
+    └── current.md
+```
 
-The smallest useful ABES is:
+## Implementation implications
 
-- a bootstrap command
-- a managed AGENTS block
-- generated project identity / architecture / goals files
-- generated state and durable memory files
-- a clear architecture and diagnosis document
+The repository should implement:
 
-That is enough to make future agents materially better at starting work in a new repository.
+1. a safer bootstrap
+2. the reduced file structure above
+3. conflict handling guidance in generated instructions
+4. tests covering traversal, parsing, and unsafe write cases
 
-## H. V2 / later
-
-Possible later additions:
-
-- selective/path-scoped rule loading
-- memory indexing/search helpers
-- artifact promotion tooling
-- evidence freshness/expiry workflow
-- opportunity ranking and interruption controls
-- optional MCP server for ABES resources
-- multi-agent coordination on top of shared ABES state
-
-## I. Failure modes
-
-- memory rot from never pruning durable files
-- giant instruction files recreating prompt monoliths
-- treating opportunities as requirements
-- over-automated initialization that invents architecture facts
-- parallel note systems that drift out of sync
-- turning ABES into an orchestration platform before the substrate is stable
-
-## J. Final recommendation
-
-ABES should be built as a **project intelligence substrate**, not a business incubator and not a full agent platform.
-
-That means:
-
-- small always-on instructions
-- repo-native durable project context
-- durable memory with explicit classes
-- separate working state
-- explicit artifacts
-- a conservative bootstrap path
-
-This repository now implements that smallest coherent version.
-
-## What changed in this implementation
-
-- removed the zip-wrapped business-workflow scaffold from the active repository shape
-- rewrote the repo around a reusable ABES foundation
-- added a concrete bootstrap script
-- added templates for durable context and memory
-- added focused bootstrap tests
-
-## What remains
-
-- stronger project detection heuristics
-- pruning/promotion workflows for memory
-- optional path-scoped rules
-- richer validation against real foreign repositories
-- host integrations beyond plain files
-
-## Uncertain assumptions
-
-- the best long-term memory granularity may eventually need splitting beyond simple markdown files
-- different host tools may prefer different instruction injection patterns
-- the right opportunity review cadence likely depends on repo size and team style
-
-## What the next independent agent should challenge
-
-1. whether the `.abes/` file taxonomy is the right minimum set
-2. whether `AGENTS.md` should stay as the only always-on entrypoint
-3. whether opportunities belong in memory or a separate backlog artifact
-4. whether bootstrap should emit nested/path-scoped rules next
-5. whether MVP needs machine-readable metadata alongside markdown
+Anything beyond that is not required for ABES to be useful today.
