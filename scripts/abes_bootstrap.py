@@ -48,7 +48,18 @@ def find_files(target: Path, patterns: Iterable[str]) -> List[Path]:
     results: List[Path] = []
     for pattern in patterns:
         results.extend(target.glob(pattern))
-    return [path for path in results if path.exists()]
+    filtered: List[Path] = []
+    for path in results:
+        if not path.exists():
+            continue
+        if path == target:
+            filtered.append(path)
+            continue
+        relative = path.relative_to(target)
+        if relative.parts and relative.parts[0] == ".abes":
+            continue
+        filtered.append(path)
+    return filtered
 
 
 def named_directory_patterns(names: Iterable[str]) -> List[str]:

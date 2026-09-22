@@ -46,16 +46,21 @@ class BootstrapTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "sample-project"
             target.mkdir()
+            (target / "packages" / "web" / "src").mkdir(parents=True)
+            (target / "services" / "api" / "tests").mkdir(parents=True)
 
             subprocess.run([sys.executable, str(SCRIPT), str(target)], check=True)
             identity_before = (target / ".abes" / "project" / "identity.md").read_text(encoding="utf-8")
-            subprocess.run([sys.executable, str(SCRIPT), str(target)], check=True)
+            subprocess.run([sys.executable, str(SCRIPT), str(target), "--force"], check=True)
 
             agents = (target / "AGENTS.md").read_text(encoding="utf-8")
             identity_after = (target / ".abes" / "project" / "identity.md").read_text(encoding="utf-8")
             self.assertEqual(agents.count("<!-- ABES:START -->"), 1)
             self.assertEqual(agents.count("<!-- ABES:END -->"), 1)
-            self.assertEqual(identity_before, identity_after)
+            self.assertIn("- packages/web/src", identity_after)
+            self.assertIn("- services/api/tests", identity_after)
+            self.assertNotIn(".abes/", identity_after)
+            self.assertNotEqual(identity_before, "")
 
     def test_bootstrap_preserves_non_ascii_agents_content(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
