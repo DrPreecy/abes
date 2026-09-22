@@ -98,6 +98,19 @@ class BootstrapTests(unittest.TestCase):
             self.assertIn("# Existing", agents)
             self.assertIn("Do not lose this.", agents)
 
+    def test_pyproject_without_declared_tools_uses_generic_command_hint(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "sample-project"
+            target.mkdir()
+            (target / "pyproject.toml").write_text("[project]\nname='demo'\nversion='0.1.0'\n", encoding="utf-8")
+
+            subprocess.run([sys.executable, str(SCRIPT), str(target)], check=True)
+
+            identity = (target / ".abes" / "project" / "identity.md").read_text(encoding="utf-8")
+            self.assertIn("inspect Python project test/lint commands before assuming any", identity)
+            self.assertNotIn("python -m pytest", identity)
+            self.assertNotIn("ruff check .", identity)
+
 
 if __name__ == "__main__":
     unittest.main()

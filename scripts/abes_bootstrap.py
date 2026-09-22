@@ -86,7 +86,13 @@ def detect_commands(target: Path) -> List[str]:
 
     pyproject = target / "pyproject.toml"
     if pyproject.exists():
-        commands.extend(["python -m pytest", "python -m unittest", "ruff check ."])
+        pyproject_text = pyproject.read_text(encoding="utf-8").lower()
+        if "pytest" in pyproject_text:
+            commands.append("python -m pytest")
+        if "ruff" in pyproject_text:
+            commands.append("ruff check .")
+        if "pytest" not in pyproject_text and "ruff" not in pyproject_text:
+            commands.append("inspect Python project test/lint commands before assuming any")
 
     if (target / "Makefile").exists():
         commands.extend(["make test", "make lint", "make build"])
