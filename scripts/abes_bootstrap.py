@@ -15,6 +15,29 @@ TEMPLATES = ROOT / "templates"
 ABES_START = "<!-- ABES:START -->"
 ABES_END = "<!-- ABES:END -->"
 MANAGED_MARKER = "<!-- ABES:MANAGED -->"
+MANIFEST_LANGUAGE_MAP = {
+    "package.json": "JavaScript/TypeScript",
+    "pyproject.toml": "Python",
+    "requirements.txt": "Python",
+    "go.mod": "Go",
+    "Cargo.toml": "Rust",
+    "pom.xml": "Java",
+    "build.gradle": "Java/Kotlin",
+    "Gemfile": "Ruby",
+}
+COMMON_MANIFESTS = [
+    "package.json",
+    "pyproject.toml",
+    "requirements.txt",
+    "go.mod",
+    "Cargo.toml",
+    "pom.xml",
+    "build.gradle",
+    "Gemfile",
+    "Makefile",
+    "docker-compose.yml",
+    "Dockerfile",
+]
 
 
 @dataclass
@@ -70,6 +93,18 @@ def named_directory_patterns(names: Iterable[str]) -> List[str]:
     return patterns
 
 
+def named_file_patterns(names: Iterable[str]) -> List[str]:
+    patterns: List[str] = []
+    for name in names:
+        patterns.append(name)
+        patterns.append(f"**/{name}")
+    return patterns
+
+
+def detect_manifests(target: Path) -> List[Path]:
+    return find_files(target, named_file_patterns(COMMON_MANIFESTS))
+
+
 def detect_commands(target: Path) -> List[str]:
     commands: List[str] = []
 
@@ -94,14 +129,22 @@ def detect_commands(target: Path) -> List[str]:
         if "pytest" not in pyproject_text and "ruff" not in pyproject_text:
             commands.append("inspect Python project test/lint commands before assuming any")
 
-    if (target / "Makefile").exists():
-        commands.extend(["make test", "make lint", "make build"])
+    makefile = target / "Makefile"
+    if makefile.exists():
+        makefile_text = makefile.read_text(encoding="utf-8")
+        make_targets = {
+            match.group(1)
+            for match in re.finditer(r"^([A-Za-z0-9_.-]+):", makefile_text, flags=re.MULTILINE)
+        }
+        for target_name in ("test", "lint", "build"):
+            if target_name in make_targets:
+                commands.append(f"make {target_name}")
 
     if (target / "go.mod").exists():
-        commands.extend(["go test ./...", "go vet ./..."])
+        commands.append("go test ./...")
 
     if (target / "Cargo.toml").exists():
-        commands.extend(["cargo test", "cargo clippy"])
+        commands.append("cargo test")
 
     unique: List[str] = []
     for command in commands:
@@ -110,44 +153,17 @@ def detect_commands(target: Path) -> List[str]:
     return unique or ["inspect repository-specific build/test commands before assuming any"]
 
 
-def detect_languages(target: Path) -> List[str]:
-    manifest_languages = {
-        "package.json": "JavaScript/TypeScript",
-        "pyproject.toml": "Python",
-        "requirements.txt": "Python",
-        "go.mod": "Go",
-        "Cargo.toml": "Rust",
-        "pom.xml": "Java",
-        "build.gradle": "Java/Kotlin",
-        "Gemfile": "Ruby",
-    }
+def detect_languages(manifests: List[str]) -> List[str]:
     detected = []
-    for manifest, label in manifest_languages.items():
-        if (target / manifest).exists() and label not in detected:
+    for manifest in manifests:
+        label = MANIFEST_LANGUAGE_MAP.get(Path(manifest).name)
+        if label and label not in detected:
             detected.append(label)
     return detected or ["undetermined from common manifests"]
 
 
 def detect_surface(target: Path) -> Detection:
-    manifests = relative_list(
-        find_files(
-            target,
-            [
-                "package.json",
-                "pyproject.toml",
-                "requirements.txt",
-                "go.mod",
-                "Cargo.toml",
-                "pom.xml",
-                "build.gradle",
-                "Gemfile",
-                "Makefile",
-                "docker-compose.yml",
-                "Dockerfile",
-            ],
-        ),
-        target,
-    ) or ["none detected from common manifest set"]
+    manifests = relative_list(detect_manifests(target), target) or ["none detected from common manifest set"]
 
     source_locations = relative_list(
         find_files(target, named_directory_patterns(["src", "app", "lib", "cmd", "server", "client"])),
@@ -161,7 +177,7 @@ def detect_surface(target: Path) -> Detection:
         find_files(target, [*named_directory_patterns(["docs"]), "README.md", "**/README.md"]),
         target,
     ) or ["not detected"]
-    languages = detect_languages(target)
+    languages = detect_languages(manifests)
     commands = detect_commands(target)
 
     observation = (

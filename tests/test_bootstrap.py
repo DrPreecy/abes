@@ -111,6 +111,48 @@ class BootstrapTests(unittest.TestCase):
             self.assertNotIn("python -m pytest", identity)
             self.assertNotIn("ruff check .", identity)
 
+    def test_makefile_only_suggests_declared_targets(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "sample-project"
+            target.mkdir()
+            (target / "Makefile").write_text("test:\n\t@echo test\nbuild:\n\t@echo build\n", encoding="utf-8")
+
+            subprocess.run([sys.executable, str(SCRIPT), str(target)], check=True)
+
+            identity = (target / ".abes" / "project" / "identity.md").read_text(encoding="utf-8")
+            self.assertIn("make test", identity)
+            self.assertIn("make build", identity)
+            self.assertNotIn("make lint", identity)
+
+    def test_go_and_rust_only_suggest_broadly_available_commands(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "sample-project"
+            target.mkdir()
+            (target / "go.mod").write_text("module example.com/demo\n\ngo 1.22\n", encoding="utf-8")
+            (target / "Cargo.toml").write_text("[package]\nname='demo'\nversion='0.1.0'\n", encoding="utf-8")
+
+            subprocess.run([sys.executable, str(SCRIPT), str(target)], check=True)
+
+            identity = (target / ".abes" / "project" / "identity.md").read_text(encoding="utf-8")
+            self.assertIn("go test ./...", identity)
+            self.assertIn("cargo test", identity)
+            self.assertNotIn("go vet ./...", identity)
+            self.assertNotIn("cargo clippy", identity)
+
+    def test_nested_manifest_contributes_to_language_detection(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "sample-project"
+            target.mkdir()
+            nested_package = target / "packages" / "web"
+            nested_package.mkdir(parents=True)
+            (nested_package / "package.json").write_text('{"name":"web"}', encoding="utf-8")
+
+            subprocess.run([sys.executable, str(SCRIPT), str(target)], check=True)
+
+            identity = (target / ".abes" / "project" / "identity.md").read_text(encoding="utf-8")
+            self.assertIn("JavaScript/TypeScript", identity)
+            self.assertIn("- packages/web/package.json", identity)
+
 
 if __name__ == "__main__":
     unittest.main()
