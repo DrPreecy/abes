@@ -56,7 +56,7 @@ def detect_commands(target: Path) -> List[str]:
     package_json = target / "package.json"
     if package_json.exists():
         try:
-            data = json.loads(package_json.read_text())
+            data = json.loads(package_json.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
             data = {}
         scripts = data.get("scripts") or {}
@@ -166,29 +166,29 @@ def write_file(path: Path, content: str, force: bool) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists() and not force:
         return
-    path.write_text(content)
+    path.write_text(content, encoding="utf-8")
 
 
 def update_agents(target: Path, force: bool) -> None:
-    template = (TEMPLATES / "AGENTS.md").read_text().strip()
+    template = (TEMPLATES / "AGENTS.md").read_text(encoding="utf-8").strip()
     managed_block = f"{ABES_START}\n{template}\n{ABES_END}\n"
     agents_path = target / "AGENTS.md"
 
     if not agents_path.exists():
-        agents_path.write_text(managed_block)
+        agents_path.write_text(managed_block, encoding="utf-8")
         return
 
-    existing = agents_path.read_text()
+    existing = agents_path.read_text(encoding="utf-8")
     pattern = re.compile(rf"{re.escape(ABES_START)}.*?{re.escape(ABES_END)}\n?", re.DOTALL)
     if pattern.search(existing):
-        agents_path.write_text(pattern.sub(managed_block, existing))
+        agents_path.write_text(pattern.sub(managed_block, existing), encoding="utf-8")
         return
 
     if force:
-        agents_path.write_text(managed_block + "\n" + existing.lstrip())
+        agents_path.write_text(managed_block + "\n" + existing.lstrip(), encoding="utf-8")
         return
 
-    agents_path.write_text(managed_block + "\n" + existing)
+    agents_path.write_text(managed_block + "\n" + existing, encoding="utf-8")
 
 
 def bootstrap(target: Path, force: bool = False) -> None:
@@ -221,7 +221,7 @@ def bootstrap(target: Path, force: bool = False) -> None:
     }
 
     for output, template_rel in files.items():
-        template_text = (ROOT / template_rel).read_text()
+        template_text = (ROOT / template_rel).read_text(encoding="utf-8")
         content = render(template_text, replacements)
         write_file(target / output, content, force)
 

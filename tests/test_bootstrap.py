@@ -33,11 +33,11 @@ class BootstrapTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "sample-project"
             target.mkdir()
-            (target / "AGENTS.md").write_text("# Existing\n\nKeep this.\n")
+            (target / "AGENTS.md").write_text("# Existing\n\nKeep this.\n", encoding="utf-8")
 
             subprocess.run([sys.executable, str(SCRIPT), str(target)], check=True)
 
-            agents = (target / "AGENTS.md").read_text()
+            agents = (target / "AGENTS.md").read_text(encoding="utf-8")
             self.assertIn("<!-- ABES:START -->", agents)
             self.assertIn("# Existing", agents)
             self.assertIn("Keep this.", agents)
@@ -50,9 +50,21 @@ class BootstrapTests(unittest.TestCase):
             subprocess.run([sys.executable, str(SCRIPT), str(target)], check=True)
             subprocess.run([sys.executable, str(SCRIPT), str(target)], check=True)
 
-            agents = (target / "AGENTS.md").read_text()
+            agents = (target / "AGENTS.md").read_text(encoding="utf-8")
             self.assertEqual(agents.count("<!-- ABES:START -->"), 1)
             self.assertEqual(agents.count("<!-- ABES:END -->"), 1)
+
+    def test_bootstrap_preserves_non_ascii_agents_content(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "sample-project"
+            target.mkdir()
+            (target / "AGENTS.md").write_text("# Grüezi\n\nÜber context.\n", encoding="utf-8")
+
+            subprocess.run([sys.executable, str(SCRIPT), str(target)], check=True)
+
+            agents = (target / "AGENTS.md").read_text(encoding="utf-8")
+            self.assertIn("# Grüezi", agents)
+            self.assertIn("Über context.", agents)
 
 
 if __name__ == "__main__":
