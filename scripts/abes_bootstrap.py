@@ -41,7 +41,7 @@ def detect_repo_name(target: Path) -> str:
 
 
 def relative_list(paths: Iterable[Path], target: Path) -> List[str]:
-    return sorted(str(path.relative_to(target)) for path in paths)
+    return sorted({str(path.relative_to(target)) for path in paths})
 
 
 def find_files(target: Path, patterns: Iterable[str]) -> List[Path]:
@@ -49,6 +49,14 @@ def find_files(target: Path, patterns: Iterable[str]) -> List[Path]:
     for pattern in patterns:
         results.extend(target.glob(pattern))
     return [path for path in results if path.exists()]
+
+
+def named_directory_patterns(names: Iterable[str]) -> List[str]:
+    patterns: List[str] = []
+    for name in names:
+        patterns.append(name)
+        patterns.append(f"**/{name}")
+    return patterns
 
 
 def detect_commands(target: Path) -> List[str]:
@@ -124,9 +132,18 @@ def detect_surface(target: Path) -> Detection:
         target,
     ) or ["none detected from common manifest set"]
 
-    source_locations = relative_list(find_files(target, ["src", "app", "lib", "cmd", "server", "client"]), target) or ["not detected"]
-    test_locations = relative_list(find_files(target, ["tests", "test", "__tests__", "spec"]), target) or ["not detected"]
-    doc_locations = relative_list(find_files(target, ["docs", "README.md"]), target) or ["not detected"]
+    source_locations = relative_list(
+        find_files(target, named_directory_patterns(["src", "app", "lib", "cmd", "server", "client"])),
+        target,
+    ) or ["not detected"]
+    test_locations = relative_list(
+        find_files(target, named_directory_patterns(["tests", "test", "__tests__", "spec"])),
+        target,
+    ) or ["not detected"]
+    doc_locations = relative_list(
+        find_files(target, [*named_directory_patterns(["docs"]), "README.md", "**/README.md"]),
+        target,
+    ) or ["not detected"]
     languages = detect_languages(target)
     commands = detect_commands(target)
 

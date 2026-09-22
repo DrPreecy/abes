@@ -15,8 +15,8 @@ class BootstrapTests(unittest.TestCase):
             target = Path(tmp) / "sample-project"
             target.mkdir()
             (target / "package.json").write_text('{"scripts":{"test":"vitest","lint":"eslint ."}}')
-            (target / "src").mkdir()
-            (target / "tests").mkdir()
+            (target / "packages" / "web" / "src").mkdir(parents=True)
+            (target / "services" / "api" / "tests").mkdir(parents=True)
             subprocess.run([sys.executable, str(SCRIPT), str(target)], check=True)
 
             self.assertTrue((target / "AGENTS.md").exists())
@@ -26,8 +26,8 @@ class BootstrapTests(unittest.TestCase):
             identity = (target / ".abes" / "project" / "identity.md").read_text()
             self.assertIn("JavaScript/TypeScript", identity)
             self.assertIn("npm run test", identity)
-            self.assertIn("- src", identity)
-            self.assertIn("- tests", identity)
+            self.assertIn("- packages/web/src", identity)
+            self.assertIn("- services/api/tests", identity)
 
     def test_bootstrap_preserves_existing_agents_with_managed_block(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -79,6 +79,19 @@ class BootstrapTests(unittest.TestCase):
             subprocess.run([sys.executable, str(SCRIPT), str(target), "--force"], check=True)
 
             self.assertEqual(goals.read_text(encoding="utf-8"), "# Custom goals\n\nDo not overwrite.\n")
+
+    def test_force_preserves_unmanaged_agents_content(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "sample-project"
+            target.mkdir()
+            (target / "AGENTS.md").write_text("# Existing\n\nDo not lose this.\n", encoding="utf-8")
+
+            subprocess.run([sys.executable, str(SCRIPT), str(target), "--force"], check=True)
+
+            agents = (target / "AGENTS.md").read_text(encoding="utf-8")
+            self.assertEqual(agents.count("<!-- ABES:START -->"), 1)
+            self.assertIn("# Existing", agents)
+            self.assertIn("Do not lose this.", agents)
 
 
 if __name__ == "__main__":
