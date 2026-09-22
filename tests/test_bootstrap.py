@@ -42,6 +42,18 @@ class BootstrapTests(unittest.TestCase):
             self.assertIn("# Existing", agents)
             self.assertIn("Keep this.", agents)
 
+    def test_bootstrap_is_idempotent_on_fresh_repository(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "sample-project"
+            target.mkdir()
+
+            subprocess.run([sys.executable, str(SCRIPT), str(target)], check=True)
+            subprocess.run([sys.executable, str(SCRIPT), str(target)], check=True)
+
+            agents = (target / "AGENTS.md").read_text()
+            self.assertEqual(agents.count("<!-- ABES:START -->"), 1)
+            self.assertEqual(agents.count("<!-- ABES:END -->"), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -175,7 +175,7 @@ def update_agents(target: Path, force: bool) -> None:
     agents_path = target / "AGENTS.md"
 
     if not agents_path.exists():
-        agents_path.write_text(template + "\n")
+        agents_path.write_text(managed_block)
         return
 
     existing = agents_path.read_text()
