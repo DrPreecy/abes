@@ -1,3 +1,4 @@
+<!-- ABES:MANAGED -->
 # Project Architecture
 
 ## Known structure

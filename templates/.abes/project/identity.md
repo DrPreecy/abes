@@ -1,3 +1,4 @@
+<!-- ABES:MANAGED -->
 # Project Identity
 
 - Project name: {{PROJECT_NAME}}

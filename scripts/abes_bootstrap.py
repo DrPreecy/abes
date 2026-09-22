@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TEMPLATES = ROOT / "templates"
 ABES_START = "<!-- ABES:START -->"
 ABES_END = "<!-- ABES:END -->"
+MANAGED_MARKER = "<!-- ABES:MANAGED -->"
 
 
 @dataclass
@@ -164,8 +165,12 @@ def bulletize(items: List[str]) -> str:
 
 def write_file(path: Path, content: str, force: bool) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    if path.exists() and not force:
-        return
+    if path.exists():
+        if not force:
+            return
+        existing = path.read_text(encoding="utf-8")
+        if MANAGED_MARKER not in existing:
+            return
     path.write_text(content, encoding="utf-8")
 
 

@@ -1,3 +1,4 @@
+<!-- ABES:MANAGED -->
 # Candidate Opportunities
 
 Record ideas that may be worth proposing later.

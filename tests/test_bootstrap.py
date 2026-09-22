@@ -48,11 +48,14 @@ class BootstrapTests(unittest.TestCase):
             target.mkdir()
 
             subprocess.run([sys.executable, str(SCRIPT), str(target)], check=True)
+            identity_before = (target / ".abes" / "project" / "identity.md").read_text(encoding="utf-8")
             subprocess.run([sys.executable, str(SCRIPT), str(target)], check=True)
 
             agents = (target / "AGENTS.md").read_text(encoding="utf-8")
+            identity_after = (target / ".abes" / "project" / "identity.md").read_text(encoding="utf-8")
             self.assertEqual(agents.count("<!-- ABES:START -->"), 1)
             self.assertEqual(agents.count("<!-- ABES:END -->"), 1)
+            self.assertEqual(identity_before, identity_after)
 
     def test_bootstrap_preserves_non_ascii_agents_content(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -65,6 +68,17 @@ class BootstrapTests(unittest.TestCase):
             agents = (target / "AGENTS.md").read_text(encoding="utf-8")
             self.assertIn("# Grüezi", agents)
             self.assertIn("Über context.", agents)
+
+    def test_force_does_not_overwrite_unmanaged_abes_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "sample-project"
+            goals = target / ".abes" / "project" / "goals.md"
+            goals.parent.mkdir(parents=True)
+            goals.write_text("# Custom goals\n\nDo not overwrite.\n", encoding="utf-8")
+
+            subprocess.run([sys.executable, str(SCRIPT), str(target), "--force"], check=True)
+
+            self.assertEqual(goals.read_text(encoding="utf-8"), "# Custom goals\n\nDo not overwrite.\n")
 
 
 if __name__ == "__main__":

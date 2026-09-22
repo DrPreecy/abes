@@ -1,3 +1,4 @@
+<!-- ABES:MANAGED -->
 # ABES Artifacts
 
 Store reusable outputs here, such as:
