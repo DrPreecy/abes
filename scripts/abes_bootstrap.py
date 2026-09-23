@@ -71,6 +71,18 @@ LEGACY_MANAGED_FILES = (
     ".abes/project/goals.md",
     ".abes/memory/opportunities.md",
 )
+LEGACY_GOALS_PLACEHOLDER_VALUES = {
+    "",
+    "none",
+    "none confirmed yet",
+    "none yet",
+    "n/a",
+    "na",
+    "tbd",
+    "todo",
+    "unknown",
+    "unset",
+}
 
 
 @dataclass
@@ -357,9 +369,13 @@ def write_file(target: Path, path: Path, content: str, force: bool) -> None:
 
 def should_remove_legacy_managed_file(legacy_relpath: str, existing: str) -> bool:
     if legacy_relpath == ".abes/project/goals.md":
-        populated_field = re.compile(r"^\s*[-*]?\s*(goal|constraint|priority|missing)\s*:\s*\S+", re.IGNORECASE)
+        populated_field = re.compile(r"^\s*[-*]?\s*(goal|constraint|priority|missing)\s*:\s*(.+?)\s*$", re.IGNORECASE)
         for line in existing.splitlines():
-            if populated_field.match(line):
+            match = populated_field.match(line)
+            if not match:
+                continue
+            value = match.group(2).strip().lower()
+            if value not in LEGACY_GOALS_PLACEHOLDER_VALUES:
                 return False
     return True
 

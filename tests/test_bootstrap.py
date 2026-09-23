@@ -304,6 +304,20 @@ class BootstrapTests(unittest.TestCase):
             self.assertTrue(goals.exists())
             self.assertIn("clarify release constraints with user", goals.read_text(encoding="utf-8"))
 
+    def test_legacy_managed_goals_with_placeholder_text_are_removed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "sample-project"
+            goals = target / ".abes" / "project" / "goals.md"
+            goals.parent.mkdir(parents=True)
+            goals.write_text(
+                "<!-- ABES:MANAGED -->\n# Project Goals and Constraints\n\n- goal: none confirmed yet\n- constraint: none\n- priority: tbd\n- missing: unknown\n",
+                encoding="utf-8",
+            )
+
+            subprocess.run([sys.executable, str(SCRIPT), str(target)], check=True)
+
+            self.assertFalse(goals.exists())
+
     def test_target_path_file_is_rejected_with_clean_error(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             target_file = Path(tmp) / "not-a-directory"
