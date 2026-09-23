@@ -65,6 +65,12 @@ EXCLUDED_DIR_NAMES = {
 SOURCE_DIR_NAMES = {"src", "app", "lib", "cmd", "server", "client"}
 TEST_DIR_NAMES = {"tests", "test", "__tests__", "spec"}
 DOC_DIR_NAMES = {"docs"}
+LEGACY_MANAGED_FILES = (
+    ".abes/project/identity.md",
+    ".abes/project/architecture.md",
+    ".abes/project/goals.md",
+    ".abes/memory/opportunities.md",
+)
 
 
 @dataclass
@@ -349,6 +355,17 @@ def write_file(target: Path, path: Path, content: str, force: bool) -> None:
     path.write_text(content, encoding="utf-8")
 
 
+def cleanup_legacy_managed_files(target: Path) -> None:
+    for legacy_relpath in LEGACY_MANAGED_FILES:
+        legacy_path = target / legacy_relpath
+        assert_safe_output_path(target, legacy_path)
+        if not legacy_path.exists():
+            continue
+        existing = legacy_path.read_text(encoding="utf-8")
+        if MANAGED_MARKER in existing:
+            legacy_path.unlink()
+
+
 def update_agents(target: Path, force: bool) -> None:
     template = (TEMPLATES / "AGENTS.md").read_text(encoding="utf-8").strip()
     managed_block = f"{ABES_START}\n{template}\n{ABES_END}\n"
@@ -389,6 +406,7 @@ def bootstrap(target: Path, force: bool = False) -> None:
         "INITIAL_INFERENCE": detection.initial_inference,
     }
 
+    cleanup_legacy_managed_files(target)
     update_agents(target, force)
 
     files = {
@@ -409,10 +427,12 @@ def bootstrap(target: Path, force: bool = False) -> None:
 def main() -> None:
     args = parse_args()
     target = Path(args.target).expanduser().resolve()
-    target.mkdir(parents=True, exist_ok=True)
-    if not target.is_dir():
-        raise SystemExit(f"Target path is not a directory: {target}")
     try:
+        if target.exists():
+            if not target.is_dir():
+                raise ValueError(f"Target path is not a directory: {target}")
+        else:
+            target.mkdir(parents=True)
         bootstrap(target, force=args.force)
     except (OSError, RuntimeError, ValueError) as error:
         raise SystemExit(str(error)) from error

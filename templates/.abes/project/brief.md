@@ -17,7 +17,7 @@
 ## Constraints and priorities
 
 - constraint: none confirmed yet
-- priority: keep the workflow chat-first; the agent should choose the next workflow instead of asking the user which ABES file to manage
+- priority: none confirmed yet
 
 ## Known unknowns
 

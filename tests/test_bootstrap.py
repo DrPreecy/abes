@@ -224,6 +224,35 @@ class BootstrapTests(unittest.TestCase):
             self.assertIn("refusing to overwrite symlinked file", result.stderr)
             self.assertEqual(outside.read_text(encoding="utf-8"), "outside\n")
 
+    def test_legacy_managed_files_are_removed_and_unmanaged_preserved(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "sample-project"
+            legacy_managed = target / ".abes" / "project" / "identity.md"
+            legacy_unmanaged = target / ".abes" / "project" / "goals.md"
+            legacy_managed.parent.mkdir(parents=True)
+            legacy_managed.write_text("<!-- ABES:MANAGED -->\n# Identity\n", encoding="utf-8")
+            legacy_unmanaged.write_text("# Goals\n\nKeep this.\n", encoding="utf-8")
+
+            subprocess.run([sys.executable, str(SCRIPT), str(target)], check=True)
+
+            self.assertFalse(legacy_managed.exists())
+            self.assertEqual(legacy_unmanaged.read_text(encoding="utf-8"), "# Goals\n\nKeep this.\n")
+
+    def test_target_path_file_is_rejected_with_clean_error(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target_file = Path(tmp) / "not-a-directory"
+            target_file.write_text("content\n", encoding="utf-8")
+
+            result = subprocess.run(
+                [sys.executable, str(SCRIPT), str(target_file)],
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("Target path is not a directory", result.stderr)
+            self.assertNotIn("Traceback", result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

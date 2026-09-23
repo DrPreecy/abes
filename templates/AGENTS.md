@@ -13,7 +13,7 @@ Then read only the memory and artifact files relevant to the current task.
 ## Working rules
 
 - Keep `AGENTS.md` small.
-- Treat `.abes/project/brief.md` as durable intent/context and `.abes/project/inventory.md` as verified repository observations.
+- Treat `.abes/project/brief.md` as durable intent/context and `.abes/project/inventory.md` as bootstrap-generated repository observations that should be verified before relying on them.
 - Treat `.abes/state/current.md` as active working state.
 - Treat `.abes/memory/*` as long-lived memory only for durable decisions and conventions.
 - Treat `.abes/artifacts/*` as generated plans, specs, research, and implementation support.
