@@ -318,6 +318,21 @@ class BootstrapTests(unittest.TestCase):
 
             self.assertFalse(goals.exists())
 
+    def test_legacy_file_with_marker_reference_in_body_is_not_removed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "sample-project"
+            goals = target / ".abes" / "project" / "goals.md"
+            goals.parent.mkdir(parents=True)
+            goals.write_text(
+                "# Notes\n\nDo not remove text mentioning <!-- ABES:MANAGED --> inside content.\n",
+                encoding="utf-8",
+            )
+
+            subprocess.run([sys.executable, str(SCRIPT), str(target)], check=True)
+
+            self.assertTrue(goals.exists())
+            self.assertIn("<!-- ABES:MANAGED -->", goals.read_text(encoding="utf-8"))
+
     def test_target_path_file_is_rejected_with_clean_error(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             target_file = Path(tmp) / "not-a-directory"
