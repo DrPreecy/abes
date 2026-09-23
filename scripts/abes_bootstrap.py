@@ -357,11 +357,10 @@ def write_file(target: Path, path: Path, content: str, force: bool) -> None:
 
 def should_remove_legacy_managed_file(legacy_relpath: str, existing: str) -> bool:
     if legacy_relpath == ".abes/project/goals.md":
+        populated_field = re.compile(r"^\s*[-*]?\s*(goal|constraint|priority|missing)\s*:\s*\S+", re.IGNORECASE)
         for line in existing.splitlines():
-            stripped = line.strip()
-            for field in ("- goal:", "- constraint:", "- priority:", "- missing:"):
-                if stripped.startswith(field) and stripped[len(field) :].strip():
-                    return False
+            if populated_field.match(line):
+                return False
     return True
 
 
