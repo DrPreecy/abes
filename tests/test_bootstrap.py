@@ -228,14 +228,21 @@ class BootstrapTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "sample-project"
             legacy_managed = target / ".abes" / "project" / "identity.md"
+            legacy_architecture = target / ".abes" / "project" / "architecture.md"
+            legacy_opportunities = target / ".abes" / "memory" / "opportunities.md"
             legacy_unmanaged = target / ".abes" / "project" / "goals.md"
             legacy_managed.parent.mkdir(parents=True)
+            legacy_opportunities.parent.mkdir(parents=True, exist_ok=True)
             legacy_managed.write_text("<!-- ABES:MANAGED -->\n# Identity\n", encoding="utf-8")
+            legacy_architecture.write_text("<!-- ABES:MANAGED -->\n# Architecture\n", encoding="utf-8")
+            legacy_opportunities.write_text("<!-- ABES:MANAGED -->\n# Opportunities\n", encoding="utf-8")
             legacy_unmanaged.write_text("# Goals\n\nKeep this.\n", encoding="utf-8")
 
             subprocess.run([sys.executable, str(SCRIPT), str(target)], check=True)
 
             self.assertFalse(legacy_managed.exists())
+            self.assertFalse(legacy_architecture.exists())
+            self.assertFalse(legacy_opportunities.exists())
             self.assertEqual(legacy_unmanaged.read_text(encoding="utf-8"), "# Goals\n\nKeep this.\n")
 
     def test_legacy_managed_goals_with_user_content_are_preserved(self) -> None:
@@ -267,6 +274,20 @@ class BootstrapTests(unittest.TestCase):
 
             self.assertTrue(goals.exists())
             self.assertIn("stabilize deployment pipeline", goals.read_text(encoding="utf-8"))
+
+    def test_legacy_managed_goals_with_placeholder_only_content_are_removed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "sample-project"
+            goals = target / ".abes" / "project" / "goals.md"
+            goals.parent.mkdir(parents=True)
+            goals.write_text(
+                "<!-- ABES:MANAGED -->\n# Project Goals and Constraints\n\n- goal:\n- constraint:\n- priority:\n- missing: clarify scope\n",
+                encoding="utf-8",
+            )
+
+            subprocess.run([sys.executable, str(SCRIPT), str(target)], check=True)
+
+            self.assertFalse(goals.exists())
 
     def test_target_path_file_is_rejected_with_clean_error(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
