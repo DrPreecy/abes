@@ -281,13 +281,28 @@ class BootstrapTests(unittest.TestCase):
             goals = target / ".abes" / "project" / "goals.md"
             goals.parent.mkdir(parents=True)
             goals.write_text(
-                "<!-- ABES:MANAGED -->\n# Project Goals and Constraints\n\n- goal:\n- constraint:\n- priority:\n- missing: clarify scope\n",
+                "<!-- ABES:MANAGED -->\n# Project Goals and Constraints\n\n- goal:\n- constraint:\n- priority:\n- missing:\n",
                 encoding="utf-8",
             )
 
             subprocess.run([sys.executable, str(SCRIPT), str(target)], check=True)
 
             self.assertFalse(goals.exists())
+
+    def test_legacy_managed_goals_with_populated_missing_are_preserved(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "sample-project"
+            goals = target / ".abes" / "project" / "goals.md"
+            goals.parent.mkdir(parents=True)
+            goals.write_text(
+                "<!-- ABES:MANAGED -->\n# Project Goals and Constraints\n\n- missing: clarify release constraints with user\n",
+                encoding="utf-8",
+            )
+
+            subprocess.run([sys.executable, str(SCRIPT), str(target)], check=True)
+
+            self.assertTrue(goals.exists())
+            self.assertIn("clarify release constraints with user", goals.read_text(encoding="utf-8"))
 
     def test_target_path_file_is_rejected_with_clean_error(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
