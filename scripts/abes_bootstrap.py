@@ -355,6 +355,16 @@ def write_file(target: Path, path: Path, content: str, force: bool) -> None:
     path.write_text(content, encoding="utf-8")
 
 
+def should_remove_legacy_managed_file(legacy_relpath: str, existing: str) -> bool:
+    if legacy_relpath == ".abes/project/goals.md":
+        for line in existing.splitlines():
+            stripped = line.strip()
+            for field in ("- goal:", "- constraint:", "- priority:", "- missing:"):
+                if stripped.startswith(field) and stripped[len(field) :].strip():
+                    return False
+    return True
+
+
 def cleanup_legacy_managed_files(target: Path) -> None:
     for legacy_relpath in LEGACY_MANAGED_FILES:
         legacy_path = target / legacy_relpath
@@ -362,7 +372,7 @@ def cleanup_legacy_managed_files(target: Path) -> None:
         if not legacy_path.exists():
             continue
         existing = legacy_path.read_text(encoding="utf-8")
-        if MANAGED_MARKER in existing:
+        if MANAGED_MARKER in existing and should_remove_legacy_managed_file(legacy_relpath, existing):
             legacy_path.unlink()
 
 

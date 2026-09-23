@@ -238,6 +238,21 @@ class BootstrapTests(unittest.TestCase):
             self.assertFalse(legacy_managed.exists())
             self.assertEqual(legacy_unmanaged.read_text(encoding="utf-8"), "# Goals\n\nKeep this.\n")
 
+    def test_legacy_managed_goals_with_user_content_are_preserved(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "sample-project"
+            goals = target / ".abes" / "project" / "goals.md"
+            goals.parent.mkdir(parents=True)
+            goals.write_text(
+                "<!-- ABES:MANAGED -->\n# Project Goals and Constraints\n\n## Current goals\n\n- goal: ship stable API\n",
+                encoding="utf-8",
+            )
+
+            subprocess.run([sys.executable, str(SCRIPT), str(target)], check=True)
+
+            self.assertTrue(goals.exists())
+            self.assertIn("ship stable API", goals.read_text(encoding="utf-8"))
+
     def test_target_path_file_is_rejected_with_clean_error(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             target_file = Path(tmp) / "not-a-directory"
