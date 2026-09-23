@@ -387,7 +387,7 @@ def cleanup_legacy_managed_files(target: Path) -> None:
         if not legacy_path.exists():
             continue
         existing = legacy_path.read_text(encoding="utf-8")
-        if existing.lstrip().startswith(MANAGED_MARKER) and should_remove_legacy_managed_file(legacy_relpath, existing):
+        if existing.startswith(MANAGED_MARKER) and should_remove_legacy_managed_file(legacy_relpath, existing):
             legacy_path.unlink()
 
 
