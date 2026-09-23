@@ -1,51 +1,43 @@
 # ABES
 
-ABES should not be a one-off business-idea workflow.
+ABES is a **repository-native project intelligence layer for coding agents**.
 
-ABES should be a **repository-native project intelligence layer for coding agents**: a small operating layer you can drop into a new or existing project so the agent can discover the project, maintain durable context, distinguish fact from inference, and keep work moving across sessions without forcing the user to manage prompt machinery.
+Its job is to make a project easier for an agent to enter, understand, resume, and change without forcing the user to manage prompts, notes, or custom workflows by hand.
 
-## Why this repo changed
+## What ABES is for
 
-The original scaffold in this repository was a business-discovery pipeline hidden behind a zip archive. It was narrowly optimized for one founder workflow, assumed fixed phases, and did not actually solve the stated problem of reusable project understanding for arbitrary repositories.
+ABES is meant for new or existing software repositories where you want an agent to:
 
-That architecture has been replaced with a smaller and more general foundation:
+- recover the project quickly
+- keep durable context in Git
+- separate stable context from changing task state
+- preserve important decisions and conventions
+- produce reusable research and plans as explicit artifacts
 
-- **chat-first interaction**
-- **durable project context** stored in-repo
-- **lightweight persistent memory** with explicit evidence and status
-- **artifact folders for plans/specs/analysis**
-- **bootstrap workflow** for bringing ABES into a new project
-- **strict fact / inference / hypothesis / recommendation separation**
+ABES is intentionally **not**:
 
-## What ABES is now
+- a business-incubator workflow
+- a giant memory database
+- a multi-agent runtime
+- a mandatory methodology the user has to learn first
 
-ABES is a **project-aware context operating layer** for coding agents.
+## Current architecture
 
-It is intentionally not:
+ABES now keeps the smallest core that proved justified after adversarial review:
 
-- a full autonomous software factory
-- a giant vector-memory system
-- a single massive instruction file
-- a business incubator workflow
-- a multi-agent framework for its own sake
+- `AGENTS.md` – the always-on entrypoint
+- `.abes/project/brief.md` – durable project intent, constraints, and known unknowns
+- `.abes/project/inventory.md` – bootstrap-generated repository observations
+- `.abes/state/current.md` – current working state and contradictions to resolve
+- `.abes/memory/{decisions,conventions}.md` – durable memory only
+- `.abes/artifacts/` – reusable plans, research, and other outputs
 
-Instead, it gives any agent a stable place to find:
+This is deliberately smaller than the previous direction:
 
-1. **project identity**
-2. **current goals and constraints**
-3. **durable decisions and conventions**
-4. **active working state**
-5. **generated artifacts**
-6. **candidate opportunities worth proposing**
-
-## Repository contents
-
-- `AGENTS.md` – operating rules for agents working on ABES itself
-- `docs/architecture.md` – proposed ABES architecture
-- `docs/research-and-diagnosis.md` – critical review, research findings, MVP, risks, and recommendation
-- `scripts/abes_bootstrap.py` – bootstrap command to initialize ABES inside a project
-- `templates/` – files copied into target repositories during bootstrap
-- `tests/test_bootstrap.py` – focused validation for bootstrap behavior
+- no default opportunity memory file
+- no speculative orchestration runtime
+- no required external database
+- no assumption that the user will manually maintain a knowledge base up front
 
 ## Bootstrap a project
 
@@ -58,14 +50,27 @@ python scripts/abes_bootstrap.py /path/to/project
 This creates or updates:
 
 - `AGENTS.md` (managed ABES block)
-- `.abes/project/identity.md`
-- `.abes/project/architecture.md`
-- `.abes/project/goals.md`
+- `.abes/project/brief.md`
+- `.abes/project/inventory.md`
 - `.abes/state/current.md`
 - `.abes/memory/decisions.md`
 - `.abes/memory/conventions.md`
-- `.abes/memory/opportunities.md`
 - `.abes/artifacts/README.md`
+
+Bootstrap is conservative:
+
+- it only performs static repository detection
+- it skips common generated/vendor trees while scanning
+- it does not overwrite unmanaged files
+- it rejects symlinked output paths
+
+## Conflict rules
+
+When sources disagree:
+
+- **user statements** win for goals, constraints, and priorities
+- **code/runtime evidence** wins for current implementation behavior
+- **ABES files** must be updated when they become stale
 
 ## Validation
 
@@ -73,24 +78,11 @@ This creates or updates:
 python -m unittest discover -s tests -v
 ```
 
-## MVP stance
+## Repository contents
 
-The MVP is deliberately small.
-
-ABES v1 should:
-
-- initialize itself inside a project
-- leave behind durable, readable context files
-- help future agents know what to read first
-- support memory promotion only for durable information
-- keep current-task state separate from long-lived memory
-
-ABES v1 should **not** yet attempt:
-
-- autonomous background idea generation loops
-- database-backed memory infrastructure
-- generalized multi-agent orchestration runtime
-- heavy indexing or retrieval infrastructure
-- complex path-scoped rule engines
-
-Those may become useful later, but they are not required to make ABES valuable now.
+- `AGENTS.md` – operating rules for agents working on ABES itself
+- `docs/architecture.md` – final ABES architecture
+- `docs/research-and-diagnosis.md` – adversarial review, disagreement matrix, scenario tests, and rationale
+- `scripts/abes_bootstrap.py` – bootstrap initializer
+- `templates/` – generated ABES files
+- `tests/test_bootstrap.py` – bootstrap validation
